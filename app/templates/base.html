@@ -1,0 +1,22 @@
+<html>
+    {%  include 'heading.html' %}
+
+    <body>
+        {%  include 'nav.html' %}
+        <!-- Header -->
+        <div class="container">
+            <div class="jumbotron">
+                <h1>
+                    <i class="fas fa-building"></i> SecurePi
+                </h1>
+                <hr>
+                <p>A simple office security system!</p>
+            </div>
+            <hr>
+            {% block content %}{% endblock %}
+        </div>
+        <div class="container">
+            {%  include 'footer.html' %}
+        </div>
+    </body>
+</html>

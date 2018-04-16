@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+        <!-- Button -->
+        <div class="container body-content">
+            <h2>
+                <i class="fa fa-arrow-down"></i> Click below to turn off alarm!
+                <i class="fa fa-arrow-down"></i>
+            </h2>
+            <button class="btn btn-danger btn-lg" id="offbtn" onclick="turnoff()">Turn Off</button>
+            <h2 id="status"></h2>
+        </div>
+        <!-- End of Button -->
+
+        <div class="panel panel-default">
+            <div class="panel-heading">Images</div>
+            <div class="panel-body">
+                <ul id="imageul">
+                    {% for image in data %}
+                    <li style="list-style: none;" class="image col-md-6">
+                        <img src="{{ image }}" width="400" height="200" />
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+
+<script>
+    function turnoff() {
+        $.ajax({
+            url: "offAlarm",
+            success: function (result) {
+                $("#status").html(result);
+            }
+        })
+    }
+</script>

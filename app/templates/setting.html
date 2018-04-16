@@ -1,0 +1,61 @@
+{%  extends 'base.html' %}
+<!-- Button -->
+        <div class="container body-content">
+            <h2>
+                <i class="fa fa-arrow-down"></i> Click below to turn the system On/Off!
+                <i class="fa fa-arrow-down"></i>
+            </h2>
+            <!-- Rounded switch -->
+            <label>System State</label>
+            <a class="toggle-btn tab contentbox ">
+                <input type="checkbox" checked class="cb-value" value="Disabled" />
+                <span class="round-btn"></span>
+            </a>
+            <h2 id="sysStatus"></h2>
+        </div>
+<!-- End of Button -->
+
+<script>
+        $(window).load(function () {
+            $.ajax({
+                url: "GetSystem",
+                success: function (result) {
+                    if (result == "Enabled") {
+                        $(".cb-value").val(result);
+                        $(".toggle-btn").addClass('active');
+                        $("#status").text("System is running!");
+                    }
+                    else {
+                        $(".cb-value").val(result);
+                        $(".toggle-btn").removeClass('active');
+                        $("#status").text("System is not running!");
+                    }
+                }
+            })
+            $('.toggle-btn').on('click', function (e) {
+                if ($('.cb-value').val() == "Enabled") {
+                    $(this).removeClass('active');
+                    $('.cb-value').val("Disabled");
+                    console.log($('.cb-value').val());
+
+                    $.ajax({
+                        type: "GET",
+                        url: "/System/Disabled"
+                    }).done(function () {
+                        $("#status").text("System is turned off!");
+                    });
+                }
+                else {
+                    $(this).addClass('active');
+                    $('.cb-value').val("Enabled");
+                    console.log($('.cb-value').val());
+                    $.ajax({
+                        type: "GET",
+                        url: "/System/Enabled"
+                    }).done(function () {
+                        $("#status").text("System is turned on!");
+                    });
+                }
+            });
+        });
+</script>

@@ -1,0 +1,9 @@
+flask
+gevent
+azure
+gpiozero
+AWSIoTPythonSDK
+mysqlclient
+picamera
+twilio
+mysql-connector

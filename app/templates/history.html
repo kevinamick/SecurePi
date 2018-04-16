@@ -1,0 +1,54 @@
+{%  extends 'base.html' %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+
+    <div class="container contentbox" style="padding: 10px;margin: 20px">
+        <!-- bar chart canvas element -->
+        <div class="chart-container" style="position: relative">
+            <canvas id="chart" style="width:600px; height:300px"></canvas>
+        </div>
+    </div>
+    <script>
+        var time = []
+        var statecount = []
+         {% for stateinfo, datetimeinfo in chartdata %}
+            console.log("{{ stateinfo }}"+" "+ "{{ datetimeinfo }}");
+            time.push("{{datetimeinfo}}");
+            statecount.push("{{stateinfo}}");
+            console.log(time);
+            console.log(statecount);
+         {% endfor %}
+        var ctx = document.getElementById("chart").getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            // The data for our dataset
+            data: {
+                labels: time.reverse(),
+                datasets: [{
+                    label: "Motion Detected",
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: statecount.reverse(),
+                }]
+            },
+            // Configuration options go here
+            options: {}
+        });
+    </script>
+    <!-- End of Animations init -->
+    <!-- Refreshes the webpage every 5 seconds -->
+    <script>
+        $(document).ready(function () {
+            setInterval(function () {
+                location.reload();
+                //drawChart();
+            }, 5000);
+        });
+    </script>
+    <!-- End of Refresh -->
+
+</body>
+
+</html>
