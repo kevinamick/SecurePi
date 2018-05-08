@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, Response
-from app import app
 import gevent
 import gevent.monkey
 from gevent.pywsgi import WSGIServer
@@ -14,9 +13,8 @@ import gpiozero
 from azure.storage.blob import BlockBlobService
 from azure.storage.blob import ContentSettings
 import configparser
-
-# TODO: Need Camera
-# from picamera import PiCamera
+app = Flask(__name__)
+from picamera import PiCamera
 
 gevent.monkey.patch_all()
 
@@ -35,8 +33,7 @@ global block_blob_service
 # ledred = LED(21)
 ms = gpiozero.MotionSensor(18, sample_rate=5, queue_len=1)
 
-# TODO: Need Camera
-# camera = PiCamera()
+camera = PiCamera()
 
 # this is our endpoint
 host = config['IOT']['host']
@@ -76,10 +73,12 @@ def system_on():
         running = True
         my_rpi.connect()
         try:
-           # global block_blob_service
+            global block_blob_service
+            
             # insert your azure blob account name and key
-           # block_blob_service = BlockBlobService(account_name='account_name', account_key='account_key')
-           # print("blob connected")
+            block_blob_service = BlockBlobService(account_name='securepi', account_key='021qUGSQKhCzGMil5eLr2llhnEEADlLhbzXfqrQayfCY8V8MgyCX3pdGX9Y9cpsitCV7re9Oe0GRpcP1Wnmfbg==')
+            
+            print("blob connected")
             # Connect to database
             db = mysql.connector.connect(user=u, password=pw, host=h, database=db)
             cursor = db.cursor()
@@ -96,27 +95,26 @@ def system_on():
             print("Motion Detected!");
             for x in range(0, 1):
                 timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        #       imagename = str(timenow) + '.jpg'
-        #       imagepath = '/home/pi/OSS/static/images/' + imagename
-                print(timenow)
-        #       camera.capture(imagepath)
-        #       print("Image Name: " + imagename)
-        #       local_path = os.path.expanduser("~/OSS/static/images")
-        #       full_path_to_file = os.path.join(local_path, imagename)
-        #       print(full_path_to_file)
-        #       block_blob_service.create_blob_from_path('mycontainer', imagename, imagepath, content_settings=ContentSettings(content_type='image/jpeg'))
-        #       print("blob uploaded")
-        #       generator = block_blob_service.list_blobs('mycontainer')
-        #       for blob in generator:
-        #          if (blob.name == imagename):
-        #             bloburl = block_blob_service.make_blob_url('mycontainer', blob.name)
-        #             sql = "INSERT into Image (ImageName, ImagePath) VALUES ('" + imagename + "','" + bloburl + "')"
-        #             cursor.execute(sql)
-        #             db.commit()
-        #
-        #             sql = "INSERT into MotionSensor (State) VALUES ('Active')"
-        #             cursor.execute(sql)
-        #             db.commit()
+                imagename = str(timenow) + '.jpg'
+                imagepath = '/home/Documents/School/SecurePi/app/static/images/' + imagename
+                camera.capture(imagepath)
+                print("Image Name: " + imagename)
+                local_path = os.path.expanduser("~/Documents/School/SecurePi/app/static/images")
+                full_path_to_file = os.path.join(local_path, imagename)
+                print(full_path_to_file)
+                block_blob_service.create_blob_from_path('mycontainer', imagename, imagepath, content_settings=ContentSettings(content_type='image/jpeg'))
+                print("blob uploaded")
+                generator = block_blob_service.list_blobs('mycontainer')
+                for blob in generator:
+                   if (blob.name == imagename):
+                      bloburl = block_blob_service.make_blob_url('mycontainer', blob.name)
+                      sql = "INSERT into Image (ImageName, ImagePath) VALUES ('" + imagename + "','" + bloburl + "')"
+                      cursor.execute(sql)
+                      db.commit()
+        
+                      sql = "INSERT into MotionSensor (State) VALUES ('Active')"
+                      cursor.execute(sql)
+                      db.commit()
                 sleep(1)
                 my_rpi.publish("sensors/motion", 'Motion Detected', 1)
             else:
@@ -128,9 +126,8 @@ def system_on():
         print(e)
 
     except KeyboardInterrupt:
-        print("Program aborted.")
-        # TODO: Waiting on Camera
-        # camera.close()
+        print("Program aborted.") 
+        camera.close()
         cursor.close()
         db.close()
         
@@ -157,7 +154,8 @@ def system(status):
         thread = threading.Thread(target=system_on)
         thread.start()
 
-    else:
+    else if status == "Disabled":
+        print("System Turning Off")
         system_off()
 
     return ""
@@ -222,9 +220,7 @@ def setting():
 
 if __name__ == '__main__':
     try:
-        app = app()
-        app.debug = True
-        http_server = WSGIServer(('', 5000), app)
+        http_server = WSGIServer(('0.0.0.0', 5000), app)
         http_server.serve_forever()
         app.debug = True
 
