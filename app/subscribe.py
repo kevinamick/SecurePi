@@ -88,8 +88,6 @@ def custom_callback(client, userdata, message):
 
 # This is our endpoint
 host = "a82oj25fppijb.iot.us-east-2.amazonaws.com"
-
-# TODO: Need to follow the instructions here: https://docs.aws.amazon.com/iot/latest/developerguide/iot-sdk-setup.html
 rootCAPath = "rootca.pem"
 certificatePath = "SecurePi.cert.pem"
 privateKeyPath = "SecurePi.private.key"

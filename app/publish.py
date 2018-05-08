@@ -222,7 +222,9 @@ def setting():
 
 if __name__ == '__main__':
     try:
-        http_server = WSGIServer(('127.0.0.1', 5000), app)
+        app = app()
+        app.debug = True
+        http_server = WSGIServer(('', 5000), app)
         http_server.serve_forever()
         app.debug = True
 
