@@ -33,7 +33,7 @@ global block_blob_service
 # ledred = LED(21)
 ms = gpiozero.MotionSensor(18, sample_rate=5, queue_len=1)
 
-camera = PiCamera()
+#camera = PiCamera()
 
 # this is our endpoint
 host = config['IOT']['host']
@@ -89,37 +89,37 @@ def system_on():
             print("Error connecting to mySQL database")
             # ledred.blink()
 
-        while running:
-            print("running")
-            ms.wait_for_motion()
-            print("Motion Detected!");
-            for x in range(0, 1):
-                timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                imagename = str(timenow) + '.jpg'
-                imagepath = '/home/Documents/School/SecurePi/app/static/images/' + imagename
-                camera.capture(imagepath)
-                print("Image Name: " + imagename)
-                local_path = os.path.expanduser("~/Documents/School/SecurePi/app/static/images")
-                full_path_to_file = os.path.join(local_path, imagename)
-                print(full_path_to_file)
-                block_blob_service.create_blob_from_path('mycontainer', imagename, imagepath, content_settings=ContentSettings(content_type='image/jpeg'))
-                print("blob uploaded")
-                generator = block_blob_service.list_blobs('mycontainer')
-                for blob in generator:
-                   if (blob.name == imagename):
-                      bloburl = block_blob_service.make_blob_url('mycontainer', blob.name)
-                      sql = "INSERT into Image (ImageName, ImagePath) VALUES ('" + imagename + "','" + bloburl + "')"
-                      cursor.execute(sql)
-                      db.commit()
+        while running: 
+            ms.wait_for_motion(timeout=2)
+            if ms.motion_detected:
+                print("Motion Detected!");
+                for x in range(0, 1):
+                    timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    imagename = str(timenow) + '.jpg'
+                    imagepath = '/home/Documents/School/SecurePi/app/static/images/' + imagename
+ #                   camera.capture(imagepath)
+ #                   print("Image Name: " + imagename)
+ #                   local_path = os.path.expanduser("~/Documents/School/SecurePi/app/static/images")
+ #                   full_path_to_file = os.path.join(local_path, imagename)
+ #                   print(full_path_to_file)
+ #                   block_blob_service.create_blob_from_path('mycontainer', imagename, imagepath, content_settings=ContentSettings(content_type='image/jpeg'))
+ #                   print("blob uploaded")
+ #                   generator = block_blob_service.list_blobs('mycontainer')
+ #                   for blob in generator:
+ #                   if (blob.name == imagename):
+ #                       bloburl = block_blob_service.make_blob_url('mycontainer', blob.name)
+ #                       sql = "INSERT into Image (ImageName, ImagePath) VALUES ('" + imagename + "','" + bloburl + "')"
+ #                       cursor.execute(sql)
+ #                       db.commit()
         
-                      sql = "INSERT into MotionSensor (State) VALUES ('Active')"
-                      cursor.execute(sql)
-                      db.commit()
-                sleep(1)
+ #                   sql = "INSERT into MotionSensor (State) VALUES ('Active')"
+ #                   cursor.execute(sql)
+ #                   db.commit()
+                sleep(5)
                 my_rpi.publish("sensors/motion", 'Motion Detected', 1)
-            else:
-                print("no motion")
-                sleep(1)
+           
+               
+                
 
     except MySQLdb.Error as e:
         print("sql")
@@ -127,7 +127,7 @@ def system_on():
 
     except KeyboardInterrupt:
         print("Program aborted.") 
-        camera.close()
+  #      camera.close()
         cursor.close()
         db.close()
         
