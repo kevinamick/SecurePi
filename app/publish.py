@@ -153,8 +153,7 @@ def system(status):
     if status == "Enabled":
         thread = threading.Thread(target=system_on)
         thread.start()
-
-    else if status == "Disabled":
+    elif status == "Disabled":
         print("System Turning Off")
         system_off()
 
