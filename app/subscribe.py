@@ -5,7 +5,7 @@ from time import sleep
 from datetime import datetime
 from twilio.rest import Client
 
-# TODO: Dont think we'll use this, but keeping just in case
+# Dont think we'll use this, but keeping just in case
 # from rpi_lcd import LCD
 
 import time

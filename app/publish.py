@@ -10,8 +10,7 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 from time import sleep
 from datetime import datetime
 import threading
-# TODO: May need to be running on pi for this to work
-# import gpiozero
+import gpiozero
 from azure.storage.blob import BlockBlobService
 from azure.storage.blob import ContentSettings
 import configparser
@@ -29,20 +28,18 @@ global cursor
 global running
 global block_blob_service
 
-# TODO: Need gpiozero
+
 # green led
 # ledgreen = LED(26)
 # red led
 # ledred = LED(21)
-# ms = MotionSensor(27, sample_rate=5, queue_len=1)
+ms = gpiozero.MotionSensor(18, sample_rate=5, queue_len=1)
 
 # TODO: Need Camera
 # camera = PiCamera()
 
-# TODO: Setup AWS IOT Device
 # this is our endpoint
 host = config['IOT']['host']
-# these need to be created
 rootCAPath = config['IOT']['rootCAPath']
 certificatePath = config['IOT']['certificatePath']
 privateKeyPath = config['IOT']['privateKeyPath']
@@ -77,12 +74,12 @@ def system_on():
     try:
         global running
         running = True
-        # my_rpi.connect()
+        my_rpi.connect()
         try:
-            global block_blob_service
+           # global block_blob_service
             # insert your azure blob account name and key
-            block_blob_service = BlockBlobService(account_name='account_name', account_key='account_key')
-            print("blob connected")
+           # block_blob_service = BlockBlobService(account_name='account_name', account_key='account_key')
+           # print("blob connected")
             # Connect to database
             db = mysql.connector.connect(user=u, password=pw, host=h, database=db)
             cursor = db.cursor()
@@ -93,38 +90,38 @@ def system_on():
             print("Error connecting to mySQL database")
             # ledred.blink()
 
-        # while running:
-        #     if ms.motion_detected:
-        #         for x in range(0, 1):
-        #             timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        #             imagename = str(timenow) + '.jpg'
-        #             imagepath = '/home/pi/OSS/static/images/' + imagename
-        #             print("Motion detected")
-        #             camera.capture(imagepath)
-        #             print("Image Name: " + imagename)
-        #             local_path = os.path.expanduser("~/OSS/static/images")
-        #             full_path_to_file = os.path.join(local_path, imagename)
-        #             print(full_path_to_file)
-        #             block_blob_service.create_blob_from_path('mycontainer', imagename, imagepath,
-        #                                                      content_settings=ContentSettings(
-        #                                                          content_type='image/jpeg'))
-        #             print("blob uploaded")
-        #             generator = block_blob_service.list_blobs('mycontainer')
-        #             for blob in generator:
-        #                 if (blob.name == imagename):
-        #                     bloburl = block_blob_service.make_blob_url('mycontainer', blob.name)
-        #                     sql = "INSERT into Image (ImageName, ImagePath) VALUES ('" + imagename + "','" + bloburl + "')"
-        #                     cursor.execute(sql)
-        #                     db.commit()
+        while running:
+            print("running")
+            ms.wait_for_motion()
+            print("Motion Detected!");
+            for x in range(0, 1):
+                timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        #       imagename = str(timenow) + '.jpg'
+        #       imagepath = '/home/pi/OSS/static/images/' + imagename
+                print(timenow)
+        #       camera.capture(imagepath)
+        #       print("Image Name: " + imagename)
+        #       local_path = os.path.expanduser("~/OSS/static/images")
+        #       full_path_to_file = os.path.join(local_path, imagename)
+        #       print(full_path_to_file)
+        #       block_blob_service.create_blob_from_path('mycontainer', imagename, imagepath, content_settings=ContentSettings(content_type='image/jpeg'))
+        #       print("blob uploaded")
+        #       generator = block_blob_service.list_blobs('mycontainer')
+        #       for blob in generator:
+        #          if (blob.name == imagename):
+        #             bloburl = block_blob_service.make_blob_url('mycontainer', blob.name)
+        #             sql = "INSERT into Image (ImageName, ImagePath) VALUES ('" + imagename + "','" + bloburl + "')"
+        #             cursor.execute(sql)
+        #             db.commit()
         #
         #             sql = "INSERT into MotionSensor (State) VALUES ('Active')"
         #             cursor.execute(sql)
         #             db.commit()
-        #             sleep(1)
-        #         my_rpi.publish("sensors/motion", 'Motion Detected', 1)
-        #     else:
-        #         print("no motion")
-        #         sleep(1)
+                sleep(1)
+                my_rpi.publish("sensors/motion", 'Motion Detected', 1)
+            else:
+                print("no motion")
+                sleep(1)
 
     except MySQLdb.Error as e:
         print("sql")
@@ -136,8 +133,8 @@ def system_on():
         # camera.close()
         cursor.close()
         db.close()
-        # TODO: Figure out what this is trying to do. Function doesnt exist
-        # gpiozero.cleanup()
+        
+        gpiozero.cleanup()
         sys.exit()
     except:
         print("Unexpected error:", sys.exc_info()[0], sys.exc_info()[1])
@@ -169,7 +166,7 @@ def system(status):
 # Alarm function.
 @app.route("/offAlarm")
 def off_alarm():
-    # my_rpi.publish("sensors/motion", 'sensoroff', 1)
+    my_rpi.publish("sensors/motion", 'sensoroff', 1)
     print("sensor off")
 
 
