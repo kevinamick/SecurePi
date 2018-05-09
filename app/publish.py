@@ -33,6 +33,7 @@ ledred = gpiozero.LED(4)
 ms = gpiozero.MotionSensor(18, sample_rate=5, queue_len=1)
 
 camera = PiCamera()
+PiCamera.CAPTURE_TIMEOUT = 10
 
 # this is our endpoint
 host = config['IOT']['host']
@@ -100,16 +101,23 @@ def system_on():
                     dirname = os.path.dirname(__file__)
                     
                     imagepath = os.path.join(dirname,'static/images/' + imagename)
-                   
-                    camera.capture(imagepath)
+                    try: 
+                        camera.capture(imagepath, use_video_port=True)
+                    except:
+                        print("Timed out waiting for close")
+                    finally:
+                        camera.close()
+                
                     print("Image Name: " + imagename)
                     print(imagepath)
                     block_blob_service.create_blob_from_path('images', imagename, imagepath, content_settings=ContentSettings(content_type='image/jpeg'))
                     print("blob uploaded")
                     generator = block_blob_service.list_blobs('images')
                     for blob in generator:
+                        
                         if (blob.name == imagename):
-                            bloburl = block_blob_service.make_blob_url('mycontainer', blob.name)
+                            bloburl = block_blob_service.make_blob_url('images', blob.name)
+                            print(bloburl)
                             sql = "INSERT into Image (ImageName, ImagePath) VALUES ('" + imagename + "','" + bloburl + "')"
                             cursor.execute(sql)
                             db.commit()    
