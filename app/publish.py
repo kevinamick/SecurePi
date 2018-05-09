@@ -10,8 +10,7 @@ from time import sleep
 from datetime import datetime
 import threading
 import gpiozero
-from azure.storage.blob import BlockBlobService
-from azure.storage.blob import ContentSettings
+from azure.storage.blob import BlockBlobService, ContentSettings, PublicAccess
 import configparser
 app = Flask(__name__)
 from picamera import PiCamera
@@ -28,12 +27,12 @@ global block_blob_service
 
 
 # green led
-# ledgreen = LED(26)
+ledgreen = gpiozero.LED(12)
 # red led
-# ledred = LED(21)
+ledred = gpiozero.LED(4)
 ms = gpiozero.MotionSensor(18, sample_rate=5, queue_len=1)
 
-#camera = PiCamera()
+camera = PiCamera()
 
 # this is our endpoint
 host = config['IOT']['host']
@@ -53,6 +52,7 @@ try:
 
     # Connect and subscribe to AWS IoT
     my_rpi.connect()
+    print("AWS connected")
 except:
     print("Unexpected error:", sys.exc_info()[0], sys.exc_info()[1])
 
@@ -60,14 +60,14 @@ except:
 def system_off():
     global running
     running = False
-    # ledgreen.off()
-    # ledred.on()
+    ledgreen.off()
+    ledred.on()
     return "System is turned off!"
 
 
 def system_on():
     import mysql.connector
-    u, pw, h, db = config['Database']['user'], config['Database']['pwd'], config['Database']['host'], config['Database']['db']
+    u, pw, h, database = config['Database']['user'], config['Database']['pwd'], config['Database']['host'], config['Database']['db']
     try:
         global running
         running = True
@@ -77,17 +77,20 @@ def system_on():
             
             # insert your azure blob account name and key
             block_blob_service = BlockBlobService(account_name='securepi', account_key='021qUGSQKhCzGMil5eLr2llhnEEADlLhbzXfqrQayfCY8V8MgyCX3pdGX9Y9cpsitCV7re9Oe0GRpcP1Wnmfbg==')
-            
+            block_blob_service.create_container('images')
+            block_blob_service.set_container_acl('images', public_access=PublicAccess.Container)
             print("blob connected")
             # Connect to database
-            db = mysql.connector.connect(user=u, password=pw, host=h, database=db)
+            print("in system_on")
+            db = mysql.connector.connect(user=u, password=pw, host=h, port=3306, database=database)
             cursor = db.cursor()
-            print("Successfully connected to database!")
-            # ledgreen.on()
-            # ledred.off()
+            print("Successfully connected to mysql database!")
+            ledgreen.on()
+            ledred.off()
         except:
             print("Error connecting to mySQL database")
-            # ledred.blink()
+            print(sys.exc_info()[0], sys.exc_info()[1])
+            ledred.blink()
 
         while running: 
             ms.wait_for_motion(timeout=2)
@@ -96,38 +99,36 @@ def system_on():
                 for x in range(0, 1):
                     timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     imagename = str(timenow) + '.jpg'
-                    imagepath = '/home/Documents/School/SecurePi/app/static/images/' + imagename
- #                   camera.capture(imagepath)
- #                   print("Image Name: " + imagename)
- #                   local_path = os.path.expanduser("~/Documents/School/SecurePi/app/static/images")
- #                   full_path_to_file = os.path.join(local_path, imagename)
- #                   print(full_path_to_file)
- #                   block_blob_service.create_blob_from_path('mycontainer', imagename, imagepath, content_settings=ContentSettings(content_type='image/jpeg'))
- #                   print("blob uploaded")
- #                   generator = block_blob_service.list_blobs('mycontainer')
- #                   for blob in generator:
- #                   if (blob.name == imagename):
- #                       bloburl = block_blob_service.make_blob_url('mycontainer', blob.name)
- #                       sql = "INSERT into Image (ImageName, ImagePath) VALUES ('" + imagename + "','" + bloburl + "')"
- #                       cursor.execute(sql)
- #                       db.commit()
-        
- #                   sql = "INSERT into MotionSensor (State) VALUES ('Active')"
- #                   cursor.execute(sql)
- #                   db.commit()
-                sleep(5)
+                    dirname = os.path.dirname(__file__)
+                    
+                    imagepath = os.path.join(dirname,'static/images/' + imagename)
+                   
+                    camera.capture(imagepath)
+                    print("Image Name: " + imagename)
+                    print(imagepath)
+                    block_blob_service.create_blob_from_path('images', imagename, imagepath)
+                    print("blob uploaded")
+                    generator = block_blob_service.list_blobs('images')
+                    for blob in generator:
+                        if (blob.name == imagename):
+                            bloburl = block_blob_service.make_blob_url('mycontainer', blob.name)
+                            sql = "INSERT into Image (ImageName, ImagePath) VALUES ('" + imagename + "','" + bloburl + "')"
+                            cursor.execute(sql)
+                            db.commit()    
+                        sql = "INSERT into MotionSensor (State) VALUES ('Active')"
+                        cursor.execute(sql)
+                        db.commit()
+                        sleep(1)
+                
                 my_rpi.publish("sensors/motion", 'Motion Detected', 1)
            
-               
-                
-
     except MySQLdb.Error as e:
         print("sql")
         print(e)
 
     except KeyboardInterrupt:
         print("Program aborted.") 
-  #      camera.close()
+        camera.close()
         cursor.close()
         db.close()
         
@@ -182,7 +183,8 @@ def home():
     import mysql.connector
     u, pw, h, db = config['Database']['user'], config['Database']['pwd'], config['Database']['host'], config['Database']['db']
     data = []
-    con = mysql.connector.connect(user=u, password=pw, host=h, database=db)
+    print("In Home")
+    con = mysql.connector.connect(user=u, password=pw, host=h, port=3306, database=db)
     print("Database successfully connected")
     cur = con.cursor()
     query = "SELECT ImagePath FROM Image ORDER BY Id DESC "
@@ -198,6 +200,7 @@ def chart():
     import mysql.connector
     u, pw, h, db = config['Database']['user'], config['Database']['pwd'], config['Database']['host'], config['Database']['db']
     chartdata = []
+    print("In history")
     con = mysql.connector.connect(user=u, password=pw, host=h, database=db)
     print("Database successfully connected")
     cur = con.cursor()
