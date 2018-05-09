@@ -76,9 +76,7 @@ def system_on():
             global block_blob_service
             
             # insert your azure blob account name and key
-            block_blob_service = BlockBlobService(account_name='securepi', account_key='021qUGSQKhCzGMiI5eLr2lIhnEEADlLhbzXfqrQayfCY8V8MgyCX3pdGX9Y9cpsitCV7re9Oe0GRpcP1Wnmfbg==')
-            block_blob_service.create_container('images')
-            block_blob_service.set_container_acl('images', public_access=PublicAccess.Container)
+            block_blob_service = BlockBlobService(account_name='securepi', account_key='021qUGSQKhCzGMiI5eLr2lIhnEEADlLhbzXfqrQayfCY8V8MgyCX3pdGX9Y9cpsitCV7re9Oe0GRpcP1Wnmfbg==') 
             print("blob connected")
             # Connect to database
             print("in system_on")
@@ -106,7 +104,7 @@ def system_on():
                     camera.capture(imagepath)
                     print("Image Name: " + imagename)
                     print(imagepath)
-                    block_blob_service.create_blob_from_path('images', imagename, imagepath)
+                    block_blob_service.create_blob_from_path('images', imagename, imagepath, content_settings=ContentSettings(content_type='image/jpeg'))
                     print("blob uploaded")
                     generator = block_blob_service.list_blobs('images')
                     for blob in generator:
