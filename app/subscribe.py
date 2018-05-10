@@ -1,5 +1,5 @@
 # Import SDK packages
-from gpiozero import LED, Button, Buzzer
+import gpiozero
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 from time import sleep
 from datetime import datetime
@@ -9,29 +9,28 @@ from twilio.rest import Client
 # from rpi_lcd import LCD
 
 import time
-import telepot
 import sys
 
 # Token for telegram bot
-my_bot_token = 'bot_key'
+#my_bot_token = 'bot_key'
 
 # Twilio Token and Information
-account_sid = "twillio_id"
-auth_token = "twillio_authtoken"
+account_sid = "AC6f95ac61f26e8dbdaa75f51f9bf8b264"
+auth_token = "cfda9623873bff4f87df1137c268c7dc"
 client = Client(account_sid, auth_token)
 
 # enter the phone number you have enter in twillio
-my_hp = "+6512345668"
-twilio_hp = "+1240468-4002"
+my_hp = "+14102590304"
+twilio_hp = "+14439735074"
 
 # Define the variables to be used
-led = LED(21)
-bz = Buzzer(26)
+led = gpiozero.LED(21)
+bz = gpiozero.Buzzer(26)
 # lcd = LCD()
 
 
 # To turn on sensors
-def sensor_on():
+def sensor_on(): 
     led.blink()
     bz.on()
     # lcd.text("Alarm is on.", 1)
@@ -56,18 +55,18 @@ def sensor_off():
 
 
 # Telegram Bot
-def respond_to_msg(msg):
-    chat_id = msg['chat']['id']
-    command = msg['text']
+#def respond_to_msg(msg):
+#    chat_id = msg['chat']['id']
+#    command = msg['text']
 
-    print('Got command: {}'.format(command))
+#    print('Got command: {}'.format(command))
 
-    if command == 'Sensoroff':
-        bot.sendMessage(chat_id, sensor_off())
+#    if command == 'Sensoroff':
+#        bot.sendMessage(chat_id, sensor_off())
 
 
-bot = telepot.Bot(my_bot_token)
-bot.message_loop(respond_to_msg)
+#bot = telepot.Bot(my_bot_token)
+#bot.message_loop(respond_to_msg)
 print('Listening for RPi commands...')
 
 
@@ -79,21 +78,21 @@ def custom_callback(client, userdata, message):
     print(message.topic)
     print("--------------\n\n")
 
-    if message.payload == 'Motion Detected':
+    if message.payload.decode('utf-8') == 'Motion Detected':
         sensor_on()
 
-    elif message.payload == 'sensoroff':
+    elif message.payload.decode('utf-8') == 'sensoroff':
         sensor_off()
 
 
 # This is our endpoint
 host = "a82oj25fppijb.iot.us-east-2.amazonaws.com"
-rootCAPath = "rootca.pem"
-certificatePath = "SecurePi.cert.pem"
-privateKeyPath = "SecurePi.private.key"
+rootCAPath = "../rootca.pem"
+certificatePath = "../71e8df2fbb-certificate.pem.crt"
+privateKeyPath = "../71e8df2fbb-private.pem.key"
 
 try:
-    my_rpi = AWSIoTMQTTClient("SubSecurePi")
+    my_rpi = AWSIoTMQTTClient("SecurePi")
     my_rpi.configureEndpoint(host, 8883)
     my_rpi.configureCredentials(rootCAPath, privateKeyPath, certificatePath)
 
@@ -109,5 +108,4 @@ except:
 
 while True:
     my_rpi.subscribe("sensors/motion", 1, custom_callback)
-    # change to correct topic
-    sleep(2)
+    sleep(5) 
