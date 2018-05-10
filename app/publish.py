@@ -77,7 +77,7 @@ def system_on():
             global block_blob_service
             
             # insert your azure blob account name and key
-            block_blob_service = BlockBlobService(account_name='securepi', account_key='021qUGSQKhCzGMiI5eLr2lIhnEEADlLhbzXfqrQayfCY8V8MgyCX3pdGX9Y9cpsitCV7re9Oe0GRpcP1Wnmfbg==') 
+            block_blob_service = BlockBlobService(account_name=config['Azure']['blob_name'], account_key=config['Azure']['blob_key']) 
             print("blob connected")
             # Connect to database
             print("in system_on")
