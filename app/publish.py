@@ -94,8 +94,10 @@ def system_on():
         while running: 
             ms.wait_for_motion(timeout=2)
             if ms.motion_detected:
-                print("Motion Detected!");
-                for x in range(0, 1):
+               print("Motion Detected!");
+                
+               for x in range(0, 1):
+                    my_rpi.publish("sensors/motion", 'Motion Detected', 1) 
                     timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     imagename = str(timenow) + '.jpg'
                     dirname = os.path.dirname(__file__)
@@ -126,18 +128,21 @@ def system_on():
                         db.commit()
                         sleep(1)
                 
-                my_rpi.publish("sensors/motion", 'Motion Detected', 1)
+                
            
     except MySQLdb.Error as e:
         print("sql")
         print(e)
+        ledgreen.off()
+        ledred.off()
 
     except KeyboardInterrupt:
         print("Program aborted.") 
         camera.close()
         cursor.close()
         db.close()
-        
+        ledgreen.off()
+        ledred.off() 
         gpiozero.cleanup()
         sys.exit()
     except:
