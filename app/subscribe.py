@@ -4,19 +4,22 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 from time import sleep
 from datetime import datetime
 from twilio.rest import Client
-
+import configparser
 # Dont think we'll use this, but keeping just in case
 # from rpi_lcd import LCD
 
 import time
 import sys
 
+config= configparser.ConfigParser()
+config.read('../config.ini')
+
 # Token for telegram bot
 #my_bot_token = 'bot_key'
 
 # Twilio Token and Information
-account_sid = "AC6f95ac61f26e8dbdaa75f51f9bf8b264"
-auth_token = "cfda9623873bff4f87df1137c268c7dc"
+account_sid = config['Twillio']['sid'] 
+auth_token = config['Twillio']['token']
 client = Client(account_sid, auth_token)
 
 # enter the phone number you have enter in twillio
