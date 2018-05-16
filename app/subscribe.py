@@ -5,73 +5,41 @@ from time import sleep
 from datetime import datetime
 from twilio.rest import Client
 import configparser
-# Dont think we'll use this, but keeping just in case
-# from rpi_lcd import LCD
-
 import time
 import sys
 
 config= configparser.ConfigParser()
 config.read('../config.ini')
 
-# Token for telegram bot
-#my_bot_token = 'bot_key'
-
 # Twilio Token and Information
 account_sid = config['Twillio']['sid'] 
 auth_token = config['Twillio']['token']
 client = Client(account_sid, auth_token)
 
-# enter the phone number you have enter in twillio
+# Twilio Info
 my_hp = "+14102590304"
 twilio_hp = "+14439735074"
 
-# Define the variables to be used
+#GPIO config
 led = gpiozero.LED(21)
 bz = gpiozero.Buzzer(26)
-# lcd = LCD()
 
-
-# To turn on sensors
 def sensor_on(): 
     led.blink()
     bz.on()
-    # lcd.text("Alarm is on.", 1)
     sms = "Alarm triggered."
-    # lcd.text("SMS Sent.", 2)
-
     message = client.api.account.messages.create(to=my_hp, from_=twilio_hp, body=sms)
-
     time.sleep(2)
-    # lcd.clear()
+    
     return message
 
-
-# To turn off sensors
 def sensor_off():
     led.off()
     bz.off()
-    # lcd.text("Alarm is off.", 1)
     sms = "Alarm is turned off"
-    # lcd.clear()
     message = client.api.account.messages.create(to=my_hp, from_=twilio_hp, body=sms)
-
-
-# Telegram Bot
-#def respond_to_msg(msg):
-#    chat_id = msg['chat']['id']
-#    command = msg['text']
-
-#    print('Got command: {}'.format(command))
-
-#    if command == 'Sensoroff':
-#        bot.sendMessage(chat_id, sensor_off())
-
-
-#bot = telepot.Bot(my_bot_token)
-#bot.message_loop(respond_to_msg)
-print('Listening for RPi commands...')
-
+    
+    return message
 
 # Custom MQTT message callback
 def custom_callback(client, userdata, message):
@@ -86,7 +54,8 @@ def custom_callback(client, userdata, message):
 
     elif message.payload.decode('utf-8') == 'sensoroff':
         sensor_off()
-
+        
+print('Listening for RPi commands...')
 
 # This is our endpoint
 host = "a82oj25fppijb.iot.us-east-2.amazonaws.com"

@@ -76,7 +76,7 @@ def system_on():
         try:
             global block_blob_service
             
-            # insert your azure blob account name and key
+            # azure blob connection
             block_blob_service = BlockBlobService(account_name=config['Azure']['blob_name'], account_key=config['Azure']['blob_key']) 
             print("blob connected")
             # Connect to database
@@ -103,6 +103,8 @@ def system_on():
                     dirname = os.path.dirname(__file__)
                     
                     imagepath = os.path.join(dirname,'static/images/' + imagename)
+                    
+                    #Camera keeps timing out so this is my hacky way of dealing with it
                     try: 
                         camera.capture(imagepath, use_video_port=True)
                     except:
@@ -114,28 +116,28 @@ def system_on():
                     print(imagepath)
                     block_blob_service.create_blob_from_path('images', imagename, imagepath, content_settings=ContentSettings(content_type='image/jpeg'))
                     print("blob uploaded")
+                   
+                    #Insert Blob link into MySQL db
                     generator = block_blob_service.list_blobs('images')
                     for blob in generator:
-                        
                         if (blob.name == imagename):
                             bloburl = block_blob_service.make_blob_url('images', blob.name)
                             print(bloburl)
                             sql = "INSERT into Image (ImageName, ImagePath) VALUES ('" + imagename + "','" + bloburl + "')"
                             cursor.execute(sql)
                             db.commit()    
-                        sql = "INSERT into MotionSensor (State) VALUES ('Active')"
-                        cursor.execute(sql)
-                        db.commit()
-                        sleep(1)
-                
-                
+                    
+                    #Insert Active State into MySQL for History Graph
+                    sql = "INSERT into MotionSensor (State) VALUES ('Active')"
+                    cursor.execute(sql)
+                    db.commit()
+                    sleep(1)         
            
     except MySQLdb.Error as e:
         print("sql")
         print(e)
         ledgreen.off()
         ledred.off()
-
     except KeyboardInterrupt:
         print("Program aborted.") 
         camera.close()
@@ -177,6 +179,8 @@ def system(status):
 def off_alarm():
     my_rpi.publish("sensors/motion", 'sensoroff', 1)
     print("sensor off")
+    
+    return ""
 
 
 # Set main() to run in the background.
