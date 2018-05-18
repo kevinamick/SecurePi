@@ -23,7 +23,7 @@ Sounds Alarm
 
 Sends Text using Twilio
 
-![alt text](https://photos.app.goo.gl/d6bct9shqLR7IqXt2)
+https://photos.app.goo.gl/d6bct9shqLR7IqXt2
 
 ## Flask Web Server
 View Pictures taken by publisher
